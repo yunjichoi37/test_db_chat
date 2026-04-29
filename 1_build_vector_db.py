@@ -35,7 +35,7 @@ def build_vector_db():
         
         # 🚨 이 부분의 쿼리를 본인의 실제 테이블명과 컬럼에 맞게 수정해야 합니다!
         # 예시: store DB의 products 테이블에서 아이디, 이름, 상세설명을 가져옴
-        query = "SELECT product_id, product_name, description FROM products"
+        query = "SELECT product_UPC, name, brand, category, package_type, size, price FROM product"
         
         df = pd.read_sql(query, conn)
         conn.close()
@@ -50,17 +50,22 @@ def build_vector_db():
     documents = []
     for index, row in df.iterrows():
         # 데이터가 비어있으면 건너뛰기
-        if pd.isna(row['description']) or str(row['description']).strip() == "":
+        if pd.isna(row['product_UPC']) or str(row['product_UPC']).strip() == "":
             continue
             
         # 메타데이터와 본문 구성 (본인 테이블 컬럼명에 맞춰 수정)
-        content = f"[상품명: {row['product_name']}]\n{row['description']}"
+        content = f"[상품명: {row['name']}]\n{row['category']}"
         
         doc = Document(
             page_content=content, 
             metadata={
-                "id": str(row['product_id']), 
-                "title": str(row['product_name'])
+                "id": str(row['product_UPC']), 
+                "title": str(row['name']),
+                "brand": str(row['brand']),
+                "category": str(row['category']),
+                "package_type": str(row['package_type']),
+                "size": str(row['size']),
+                "price": str(row['price'])
             }
         )
         documents.append(doc)
