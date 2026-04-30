@@ -19,32 +19,25 @@ def run_sql_agent():
     print("MySQL 데이터베이스 구조 스캔")
     
     # 1. DB 연결 및 스키마 자동 파악
-    # SQLAlchemy의 URI 형식을 사용하여 연결합니다.
+    # SQLAlchemy의 URI 형식 사용해서 연결
     db_uri = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
     
     try:
         db = SQLDatabase.from_uri(db_uri)
-        # db.get_usable_table_names()를 통해 챗봇이 파악한 테이블 목록을 확인할 수 있습니다.
+        # db.get_usable_table_names()로 테이블 목록을 확인
         print(f"테이블 목록: {db.get_usable_table_names()}")
     except Exception as e:
         print("DB 연결 실패:", e)
         return
 
     # 2. LLM 설정 (Llama 3.1 사용)
-    # 추론 능력 필요 > 온도를 0으로 설정
     llm = ChatGroq(
         api_key=GROQ_API_KEY,
-        # model_name="llama-3.3-70b-versatile", # 얘가 정답 맞힘. 근데 토큰이 없음 ㅠㅠ
+        model_name="llama-3.3-70b-versatile", # 얘가 정답 맞힘. 근데 토큰이 없음 ㅠㅠ
         # model_name="llama-3.1-8b-instant", # 약간 덜 떨어짐
-        model_name="openai/gpt-oss-120b", # 오 좀 더 똑똑한듯? 토큰 아끼자
-
-        temperature=0
+        # model_name="openai/gpt-oss-120b", # 오 좀 더 똑똑한듯? 토큰 아끼자
+        temperature=0 # 추론 능력 필요 > 온도를 0으로 설정
     )
-    # llm = ChatGoogleGenerativeAI(
-    # model="gemini-2.0-flash",
-    # google_api_key=os.getenv("GOOGLE_API_KEY"),
-    # temperature=0
-    # )
 
     # 3. SQL Agent 생성: 스키마 보고 쿼리 짜는 역할
     agent_executor = create_sql_agent(
@@ -61,7 +54,12 @@ def run_sql_agent():
                 2. Only use the tables listed above. Never assume or invent table/column names.
                 3. Always verify column names with sql_db_schema before writing a query.
                 4. Report query results as facts. Do NOT add disclaimers or caveats like 'this may not reflect actual data'.
-                5. The query results ARE the actual data."""
+                5. The query results ARE the actual data.
+                
+                Output Format:
+                1. Format the final query results as a CSV string (comma-separated).
+                2. Do not create Markdown tables or use extra padding spaces.
+                3. Include column headers in the first line of the CSV output."""
     )
 
     # 4. 터미널 채팅 루프
@@ -72,7 +70,7 @@ def run_sql_agent():
     while True:
         user_input = input("질문: ")
         
-        if user_input.lower() in ['exit', 'quit']:
+        if user_input.lower() in ['exit', 'quit', 'ㄷ턋']:
             print("채팅 종료")
             break
             
