@@ -19,17 +19,25 @@ def build_vector_db():
         print("NotFound CSV")
         return
 
-    # 2. DataFrame을 LangChain Document 객체로 변환
+    # 2. DataFrame을 LangChain Document 객체로 변환    
     documents = []
     for index, row in df.iterrows():
-        # 검색 품질을 높이기 위해 제목과 내용을 합쳐서 본문으로 만듭니다.
-        content = f"[제목: {row['title']}]\n{row['description']}"
+        raw_desc = str(row['description'])
+        customer_info = raw_desc.split(']')[0].replace('[고객명: ', '').split(',')[0].strip()
+        enhanced_title = f"{customer_info} - {row['title']}"
+        
+        # 본문 구성
+        content = (
+            f"고객사: {customer_info}\n"
+            f"제목: {enhanced_title}\n"
+            f"내용: {raw_desc}"
+        )
         
         doc = Document(
             page_content=content, 
             metadata={
                 "id": str(row['id']), 
-                "title": str(row['title'])
+                "title": enhanced_title
             }
         )
         documents.append(doc)

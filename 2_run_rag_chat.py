@@ -37,7 +37,14 @@ def run_chat():
     )
     
     # Retriever 설정: 가장 유사한 문맥 3개를 가져오도록 설정
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    
+    print("\n--- 검색 엔진 테스트 시작 ---")
+    test_docs = retriever.invoke("튼튼치과") # get_relevant_documents 대신 invoke 사용 권장
+    print(f"검색된 문서 개수: {len(test_docs)}")
+    for i, d in enumerate(test_docs):
+        print(f"[{i}] {d.page_content[:50]}...")
+    print("--- 검색 엔진 테스트 종료 ---\n")
 
     # 3. LLM 설정
     llm = ChatGroq(
