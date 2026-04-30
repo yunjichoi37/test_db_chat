@@ -1,8 +1,9 @@
 # run_sql_dynamic.py
 import os
-from urllib.parse import quote_plus
 import warnings
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
+from sqlalchemy import create_engine
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import create_sql_agent
 from langchain_groq import ChatGroq
@@ -48,6 +49,7 @@ def run_sql_agent():
     ]
     
     db_uri = f"mysql+pymysql://{MYSQL_USER}:{quote_plus(MYSQL_PASSWORD)}@{MYSQL_HOST}/{MYSQL_DB}"
+    engine = create_engine(db_uri) # DB engine(connection pool) 생성
     
     llm = ChatGroq(
         api_key=GROQ_API_KEY,
@@ -83,8 +85,8 @@ def run_sql_agent():
         relevant_tables = get_relevant_tables(user_input, llm, all_tables)
         print(f"1. 선택된 테이블: {relevant_tables}")
 
-        # 2단계: 해당 테이블만 로드
-        db = SQLDatabase.from_uri(db_uri, include_tables=relevant_tables)
+        # 2단계: 미리 만들어둔 engine을 재사용하여 객체 생성
+        db = SQLDatabase(engine=engine, include_tables=relevant_tables)
 
         # 3단계: Agent 실행
         agent_executor = create_sql_agent(
@@ -103,6 +105,12 @@ def run_sql_agent():
             print("-" * 60)
         except Exception as e:
             print(f"\n에러: {e}\n")
+
+# 캐시 기능은 일단 고민...
+# cache_key = tuple(sorted(relevant_tables))
+# if cache_key not in db_cache:
+#     db_cache[cache_key] = SQLDatabase(engine, include_tables=relevant_tables)
+# db = db_cache[cache_key]
 
 if __name__ == "__main__":
     run_sql_agent()
