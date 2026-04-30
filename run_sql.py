@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits import create_sql_agent
 from langchain_groq import ChatGroq
-from langchain_google_genai import ChatGoogleGenerativeAI
-
 
 warnings.filterwarnings("ignore")
 load_dotenv()
@@ -27,16 +25,19 @@ def run_sql_agent():
     try:
         db = SQLDatabase.from_uri(db_uri)
         # db.get_usable_table_names()를 통해 챗봇이 파악한 테이블 목록을 확인할 수 있습니다.
-        print(f"테이블들: {db.get_usable_table_names()}")
+        print(f"테이블 목록: {db.get_usable_table_names()}")
     except Exception as e:
         print("DB 연결 실패:", e)
         return
 
     # 2. LLM 설정 (Llama 3.1 사용)
-    # 똑똑한 추론 능력이 필요하므로 온도를 0으로 설정합니다.
+    # 추론 능력 필요 > 온도를 0으로 설정
     llm = ChatGroq(
         api_key=GROQ_API_KEY,
-        model_name="llama-3.3-70b-versatile",
+        # model_name="llama-3.3-70b-versatile", # 얘가 정답 맞힘. 근데 토큰이 없음 ㅠㅠ
+        # model_name="llama-3.1-8b-instant", # 약간 덜 떨어짐
+        model_name="openai/gpt-oss-120b", # 오 좀 더 똑똑한듯? 토큰 아끼자
+
         temperature=0
     )
     # llm = ChatGoogleGenerativeAI(
